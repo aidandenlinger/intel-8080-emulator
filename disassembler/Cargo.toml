@@ -1,0 +1,9 @@
+[package]
+name = "disassembler"
+description = "A disassembler for Intel 8080 programs"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.5.41", features = ["derive"] }
