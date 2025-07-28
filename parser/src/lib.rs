@@ -1,6 +1,6 @@
 use nom::IResult;
-use nom::bytes::complete::take as nom_take;
 use nom::number::complete::le_u16 as nom_le_u16;
+use nom::number::complete::u8 as nom_u8;
 
 pub mod opcodes;
 
@@ -50,15 +50,15 @@ struct Ctx {
 }
 
 /// A wrapper around nom's take that updates Ctx with the amount consumed.
-fn take<'input>(n: u16, input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], &'input [u8]> {
-    let res = nom_take(n)(input)?;
-    ctx.consumed_so_far += n;
+fn u8<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u8> {
+    let res = nom_u8(input)?;
+    ctx.consumed_so_far += 1;
 
     Ok(res)
 }
 
 /// Parses a u16 from two bytes (handling little-endian-ness) and updates the Ctx.
-fn data<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16> {
+fn u16<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16> {
     let res = nom_le_u16(input)?;
     ctx.consumed_so_far += 2; // consumes two u8s
 
@@ -67,19 +67,19 @@ fn data<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16
 
 /// Parses an address from two bytes (handling little-endian-ness) and updates the Ctx.
 fn addr<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Address> {
-    let (i, data) = data(input, ctx)?;
+    let (i, data) = u16(input, ctx)?;
     Ok((i, Address(data)))
 }
 
 /// Parses an instruction and how many parameters it used.
 fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
     let mut ctx = Ctx::default();
-    let (i, byte) = take(1, input, &mut ctx)?;
+    let (i, byte) = u8(input, &mut ctx)?;
 
-    let (i, op) = match byte[0] {
+    let (i, op) = match byte {
         0x00 => (i, Op::Nop),
         0x01 => {
-            let (i, data) = data(i, &mut ctx)?;
+            let (i, data) = u16(i, &mut ctx)?;
             (i, Op::Lxi(RegisterPair::BC, data))
         }
         0x02 => (i, Op::Stax(RegisterPair::BC)),
@@ -87,8 +87,8 @@ fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
         0x04 => (i, Op::Inr(RegisterOrMemory::Register(Register::B))),
         0x05 => (i, Op::Dcr(RegisterOrMemory::Register(Register::B))),
         0x06 => {
-            let (i, data) = take(1, i, &mut ctx)?;
-            (i, Op::Mvi(RegisterOrMemory::Register(Register::B), data[0]))
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::B), data))
         }
         0x07 => (i, Op::Rcl),
         0x08 => (i, Op::Undefined),
