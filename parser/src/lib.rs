@@ -82,10 +82,18 @@ fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
             let (i, data) = data(i, &mut ctx)?;
             (i, Op::Lxi(RegisterPair::BC, data))
         }
+        0x02 => (i, Op::Stax(RegisterPair::BC)),
+        0x03 => (i, Op::Inx(RegisterPair::BC)),
+        0x04 => (i, Op::Inr(RegisterOrMemory::Register(Register::B))),
+        0x05 => (i, Op::Dcr(RegisterOrMemory::Register(Register::B))),
         0x06 => {
             let (i, data) = take(1, i, &mut ctx)?;
             (i, Op::Mvi(RegisterOrMemory::Register(Register::B), data[0]))
         }
+        0x07 => (i, Op::Rcl),
+        0x08 => (i, Op::Undefined),
+        0x09 => (i, Op::Dad(RegisterPair::BC)),
+        0x0a => todo!(),
         _ => todo!(),
     };
 
