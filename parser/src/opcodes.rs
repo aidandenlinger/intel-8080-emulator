@@ -184,7 +184,11 @@ pub enum Op {
 pub struct RestartNum(u8);
 
 impl RestartNum {
-    fn new(data: u8) -> Result<Self, String> {
+    /// Generates a `RestartNum` from a u8.
+    ///
+    /// # Errors
+    /// If input is not within 0..8
+    pub fn new(data: u8) -> Result<Self, String> {
         let accepted_range = 0..8;
 
         if !accepted_range.contains(&data) {

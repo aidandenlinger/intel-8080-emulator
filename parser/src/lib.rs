@@ -1,4 +1,10 @@
 use nom::IResult;
+use nom::Input;
+use nom::Offset;
+use nom::Parser;
+use nom::combinator::consumed;
+use nom::combinator::map;
+use nom::error::ParseError;
 use nom::number::complete::le_u16 as nom_le_u16;
 use nom::number::complete::u8 as nom_u8;
 
@@ -49,26 +55,43 @@ struct Ctx {
     consumed_so_far: u16,
 }
 
-/// A wrapper around nom's take that updates Ctx with the amount consumed.
-fn u8<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u8> {
-    let res = nom_u8(input)?;
-    ctx.consumed_so_far += 1;
+/// Wrapper function which takes a parser, runs it on input, and adds the number
+/// of consumed bytes to Ctx.
+fn update_ctx<'input, P, Error, Items>(
+    parser: P,
+    input: &'input [Items],
+    ctx: &mut Ctx,
+) -> IResult<&'input [Items], <P as Parser<&'input [Items]>>::Output, Error>
+where
+    &'input [Items]: Offset + Input,
+    Error: ParseError<&'input [Items]>,
+    P: Parser<&'input [Items], Error = Error>,
+{
+    let (i, (eaten, res)) = consumed(parser).parse(input)?;
+    ctx.consumed_so_far +=
+        u16::try_from(eaten.len()).expect("Instructions to never be larger than 3 bytes");
 
-    Ok(res)
+    Ok((i, res))
+}
+
+/// Parses a u8 and updates the Ctx.
+fn u8<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u8> {
+    update_ctx(nom_u8, input, ctx)
 }
 
 /// Parses a u16 from two bytes (handling little-endian-ness) and updates the Ctx.
 fn u16<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16> {
-    let res = nom_le_u16(input)?;
-    ctx.consumed_so_far += 2; // consumes two u8s
-
-    Ok(res)
+    update_ctx(nom_le_u16, input, ctx)
 }
 
 /// Parses an address from two bytes (handling little-endian-ness) and updates the Ctx.
 fn addr<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Address> {
-    let (i, data) = u16(input, ctx)?;
-    Ok((i, Address(data)))
+    update_ctx(map(nom_le_u16, Address), input, ctx)
+}
+
+/// Parses a port from one byte and updates the Ctx.
+fn port<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Port> {
+    update_ctx(map(nom_u8, Port), input, ctx)
 }
 
 /// Parses an instruction and how many parameters it used.
