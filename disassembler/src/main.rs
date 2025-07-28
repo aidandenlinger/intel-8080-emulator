@@ -1,14 +1,19 @@
+//! A disassembler for Intel 8080 programs.
+//!
+//! A CLI driver for the `parser` library.
 use std::path::PathBuf;
 
 use clap::Parser;
 
 #[derive(Parser)]
 #[command(about)]
+/// Arguments parsed from the command line
 struct Cli {
     /// File(s) to disassemble
     files: Vec<PathBuf>,
 }
 
+#[expect(clippy::print_stdout, reason = "Actual CLI output")]
 fn main() {
     let args = Cli::parse();
 

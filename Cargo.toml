@@ -1,3 +1,35 @@
 [workspace]
 resolver = "3" # edition "2024" default
 members = ["disassembler", "parser"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = "warn"
+absolute_paths = "warn"  # Enforce I don't get too unweldy with import paths
+allow_attributes = "warn" # Enforce less debt by removing unneeded #expects
+allow_attributes_without_reason = "warn" # Enforce I know why I added a bypass
+arithmetic_side_effects = "warn" # Especially since this is an emulator, think about wrapping
+assertions_on_result_states = "warn" # Nicer tests
+clone_on_ref_ptr = "warn" # A nicer format
+dbg_macro = "warn" # Good to prevent in final commits
+empty_enum_variants_with_brackets = "warn"  # Good behavior and I don't have API breakage
+empty_structs_with_brackets = "warn" # Good behavior and I don't have API breakage
+# expect_used = "warn" # This is a bit strict for me right now, but I should enable it eventually
+impl_trait_in_params = "warn" # Good to keep functions flexible
+map_with_unused_argument_over_ranges = "warn" # I prefer simpler expressions
+missing_assert_message = "warn" # I like good explanations
+missing_docs_in_private_items = "warn" # Docs good
+module_name_repetitions = "warn" # I like the Rust style of not repeating module names
+multiple_inherent_impl = "warn" # Good to keep code together, this is a small codebase
+pattern_type_mismatch = "warn" # This has always been unclear to me, good to be verbose
+precedence_bits = "warn" # If I'm doing bit stuff I want it to be clear
+print_stderr = "warn" # In general I'm debugging. I can #expect on actual intended cases in the CLI
+print_stdout = "warn" # In general I'm debugging. I can #expect on actual intended cases in the CLI
+redundant_test_prefix = "warn" # Reduce repetition
+redundant_type_annotations = "warn" # Reduce repetition
+rest_pat_in_fully_bound_structs = "warn" # Reduce extra noise
+todo = "warn" # Often I'm just debugging and it'll be nice to jump to todos easily
+unwrap_used = "warn" # Properly propogate errors
+use_debug = "warn" # used for debugging

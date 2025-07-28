@@ -7,3 +7,6 @@ license = "MIT"
 
 [dependencies]
 nom = "8.0.0"
+
+[lints]
+workspace = true

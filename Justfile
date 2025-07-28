@@ -3,7 +3,8 @@ build:
 
 check:
     cargo fmt --check
-    cargo clippy -- -Wclippy::pedantic
+    # fail on warnings in CI, check everything including tests
+    cargo clippy --all-targets -- -D warnings
     cargo test
 
 test:

@@ -1,3 +1,4 @@
+//! A parsing library for Intel 8080 programs.
 use nom::IResult;
 use nom::Input;
 use nom::Offset;
@@ -39,6 +40,10 @@ pub fn parse_8080_op<'input>(
 ) -> IResult<&'input [u8], OpAndAddress> {
     let (i, (op, size)) = parse_instruction(input)?;
 
+    #[expect(
+        clippy::arithmetic_side_effects,
+        reason = "Address-Size addition panics on overflow"
+    )]
     let address = if let Some(last) = last_instruction {
         last.address + last.size
     } else {
@@ -68,8 +73,15 @@ where
     P: Parser<&'input [Items], Error = Error>,
 {
     let (i, (eaten, res)) = consumed(parser).parse(input)?;
-    ctx.consumed_so_far +=
-        u16::try_from(eaten.len()).expect("Instructions to never be larger than 3 bytes");
+
+    #[expect(
+        clippy::arithmetic_side_effects,
+        reason = "This will never be a large addition"
+    )]
+    {
+        ctx.consumed_so_far +=
+            u16::try_from(eaten.len()).expect("Instructions to never be larger than 3 bytes");
+    }
 
     Ok((i, res))
 }
@@ -85,11 +97,13 @@ fn u16<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16>
 }
 
 /// Parses an address from two bytes (handling little-endian-ness) and updates the Ctx.
+#[expect(dead_code, reason = "it's only dead for now")]
 fn addr<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Address> {
     update_ctx(map(nom_le_u16, Address), input, ctx)
 }
 
 /// Parses a port from one byte and updates the Ctx.
+#[expect(dead_code, reason = "it's only dead for now")]
 fn port<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Port> {
     update_ctx(map(nom_u8, Port), input, ctx)
 }
@@ -116,8 +130,7 @@ fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
         0x07 => (i, Op::Rcl),
         0x08 => (i, Op::Undefined),
         0x09 => (i, Op::Dad(RegisterPair::BC)),
-        0x0a => todo!(),
-        _ => todo!(),
+        _ => unimplemented!(),
     };
 
     Ok((i, (op, Size(ctx.consumed_so_far))))
@@ -130,7 +143,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_different_sized_ops() -> Result<(), Box<dyn Error>> {
+    fn different_sized_ops() -> Result<(), Box<dyn Error>> {
         let program = b"\x00\x06\xAA\x01\x22\x33";
 
         let mut expected = VecDeque::from([

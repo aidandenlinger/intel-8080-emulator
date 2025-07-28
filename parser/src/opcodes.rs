@@ -258,7 +258,11 @@ impl Add<Size> for Address {
     type Output = Address;
 
     fn add(self, rhs: Size) -> Self::Output {
-        Address(self.0 + rhs.0)
+        Address(
+            self.0
+                .checked_add(rhs.0)
+                .expect("Should never go over the entire 16-bit address space"),
+        )
     }
 }
 
@@ -275,7 +279,7 @@ mod tests {
         assert_eq!(num.0, 7);
 
         let err = RestartNum::new(8);
-        assert!(err.is_err());
+        err.unwrap_err();
 
         Ok(())
     }
