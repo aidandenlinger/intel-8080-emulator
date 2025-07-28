@@ -84,7 +84,7 @@ fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
         }
         0x06 => {
             let (i, data) = take(1, i, &mut ctx)?;
-            (i, Op::Mvi(Register::B, data[0]))
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::B), data[0]))
         }
         _ => todo!(),
     };
