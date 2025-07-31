@@ -1,6 +1,7 @@
-use std::ops::Add;
+use crate::{Error, Result};
 
 /// All Intel 8080 operations. Note: I am making data big endian.
+use crate::{Error, PResult};
 #[derive(PartialEq, Debug)]
 pub enum Op {
     // Data transfer group
@@ -188,11 +189,13 @@ impl RestartNum {
     ///
     /// # Errors
     /// If input is not within 0..8
-    pub fn new(data: u8) -> Result<Self, String> {
+    pub fn new(data: u8) -> PResult<Self> {
         let accepted_range = 0..8;
 
         if !accepted_range.contains(&data) {
-            return Err(format!("{data} not in {accepted_range:#?}"));
+            return Err(Error::Internal(format!(
+                "{data} not in {accepted_range:#?}"
+            )));
         }
 
         Ok(Self(data))
@@ -252,17 +255,18 @@ pub struct OpAndAddress {
 
 /// How many bytes have been used in parsing this instruction.
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub(crate) struct Size(pub u16);
+pub struct Size(pub u16);
 
-impl Add<Size> for Address {
-    type Output = Address;
-
-    fn add(self, rhs: Size) -> Self::Output {
-        Address(
-            self.0
-                .checked_add(rhs.0)
-                .expect("Should never go over the entire 16-bit address space"),
-        )
+impl Address {
+    /// Adds a size to an address.
+    ///
+    /// # Errors
+    /// If the result overflows the 16-bit address space.
+    pub fn checked_add(self, rhs: Size) -> PResult<Self> {
+        self.0
+            .checked_add(rhs.0)
+            .map(Self)
+            .ok_or_else(|| Error::Internal(format!("Overflow adding {self:?} to {rhs:?}")))
     }
 }
 
@@ -271,7 +275,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn valid_restart_nums() -> Result<(), String> {
+    fn valid_restart_nums() -> PResult<()> {
         let num = RestartNum::new(0)?;
         assert_eq!(num.0, 0);
 

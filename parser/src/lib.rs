@@ -1,4 +1,5 @@
 //! A parsing library for Intel 8080 programs.
+use core::result::Result as StdResult;
 use nom::IResult;
 use nom::Input;
 use nom::Offset;
@@ -9,9 +10,14 @@ use nom::error::ParseError;
 use nom::number::complete::le_u16 as nom_le_u16;
 use nom::number::complete::u8 as nom_u8;
 
+pub mod error;
 pub mod opcodes;
 
+pub use crate::error::*;
 pub use crate::opcodes::*;
+
+/// Custom result returning this crate's error type
+type PResult<I> = StdResult<I, crate::Error>;
 
 /// Parses an Intel 8080 instruction and stores its address.
 /// If this is the first instruction, pass `None` for last instruction.
@@ -37,15 +43,11 @@ pub use crate::opcodes::*;
 pub fn parse_8080_op<'input>(
     input: &'input [u8],
     last_instruction: Option<&OpAndAddress>,
-) -> IResult<&'input [u8], OpAndAddress> {
+) -> PResult<(&'input [u8], OpAndAddress)> {
     let (i, (op, size)) = parse_instruction(input)?;
 
-    #[expect(
-        clippy::arithmetic_side_effects,
-        reason = "Address-Size addition panics on overflow"
-    )]
     let address = if let Some(last) = last_instruction {
-        last.address + last.size
+        last.address.checked_add(last.size)?
     } else {
         Address(0)
     };
@@ -56,8 +58,8 @@ pub fn parse_8080_op<'input>(
 /// Any context required while parsing a single instruction.
 #[derive(Default)]
 struct Ctx {
-    /// How many u8s we've consumed so far. Managed by wrappers around nom functions.
-    consumed_so_far: u16,
+    /// How many u8s we've consumed so far
+    consumed_so_far: usize,
 }
 
 /// Wrapper function which takes a parser, runs it on input, and adds the number
@@ -74,13 +76,12 @@ where
 {
     let (i, (eaten, res)) = consumed(parser).parse(input)?;
 
-    #[expect(
-        clippy::arithmetic_side_effects,
-        reason = "This will never be a large addition"
-    )]
+    #[expect(clippy::expect_used, reason = "Difficult to pass a non-nom error here")]
     {
-        ctx.consumed_so_far +=
-            u16::try_from(eaten.len()).expect("Instructions to never be larger than 3 bytes");
+        ctx.consumed_so_far = ctx
+            .consumed_so_far
+            .checked_add(eaten.len())
+            .expect("for bytes consumed to not overflow a usize");
     }
 
     Ok((i, res))
@@ -109,7 +110,7 @@ fn port<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Por
 }
 
 /// Parses an instruction and how many parameters it used.
-fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
+fn parse_instruction(input: &[u8]) -> PResult<(&[u8], (Op, Size))> {
     let mut ctx = Ctx::default();
     let (i, byte) = u8(input, &mut ctx)?;
 
@@ -133,17 +134,32 @@ fn parse_instruction(input: &[u8]) -> IResult<&[u8], (Op, Size)> {
         _ => unimplemented!(),
     };
 
-    Ok((i, (op, Size(ctx.consumed_so_far))))
+    let size = ctx
+        .consumed_so_far
+        .try_into()
+        .map(Size)
+        .map_err(|e| Error::Internal(format!("Bytes consumed larger than u16: {e}")))?;
+
+    Ok((i, (op, size)))
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::VecDeque, error::Error};
+    use std::collections::VecDeque;
 
     use super::*;
 
     #[test]
-    fn different_sized_ops() -> Result<(), Box<dyn Error>> {
+    fn incorrect_num_of_params() {
+        let program = b"\x01\xAA"; // 0x01 needs two bytes, this only has one
+
+        let expect_err = parse_8080_op(program, None);
+
+        expect_err.unwrap_err();
+    }
+
+    #[test]
+    fn different_sized_ops() -> PResult<()> {
         let program = b"\x00\x06\xAA\x01\x22\x33";
 
         let mut expected = VecDeque::from([
@@ -177,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn basic_no_op_program() -> Result<(), Box<dyn Error>> {
+    fn basic_no_op_program() -> PResult<()> {
         let program = b"\x00\x00\x00"; // Three nops
         let (rest, instruction) = parse_8080_op(program, None)?;
         assert_eq!(
