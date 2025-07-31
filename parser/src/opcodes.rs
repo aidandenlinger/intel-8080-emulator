@@ -1,7 +1,8 @@
-use crate::{Error, Result};
+use subenum::subenum;
 
-/// All Intel 8080 operations. Note: I am making data big endian.
 use crate::{Error, PResult};
+
+/// All Intel 8080 operations
 #[derive(PartialEq, Debug)]
 pub enum Op {
     // Data transfer group
@@ -19,10 +20,10 @@ pub enum Op {
     Lhld(Address),
     /// Store HL direct
     Shld(Address),
-    /// Load accumulator indirect. NOTE - using HL or SP is not valid.
-    Ldax(RegisterPair),
-    /// Store accumulator indirect.  NOTE - using HL or SP is not valid.
-    Stax(RegisterPair),
+    /// Load accumulator indirect
+    Ldax(RegisterPairLdStAcc),
+    /// Store accumulator indirect
+    Stax(RegisterPairLdStAcc),
     /// Exchange HL with DE
     Xchg,
 
@@ -152,12 +153,12 @@ pub enum Op {
     Pchl,
 
     // Stack, I/O, and Machine Control Group
-    /// Push. NOTE - SP cannot be specified here. The opcode cooresponds to PUSH PSW
-    Push(RegisterPair),
+    /// Push
+    Push(RegisterPairNonSp),
     /// Push processor status word
     PushPsw,
-    /// Pop. NOTE - SP cannot be specified here. The opcode cooresponds to POP PSW
-    Pop(RegisterPair),
+    /// Pop
+    Pop(RegisterPairNonSp),
     /// Pop processor status word
     PopPsw,
     /// Exchange stack top with HL
@@ -223,14 +224,18 @@ pub enum Register {
     L,
 }
 
-/// 16 bit registers, handled as pairs of 8-bit registers (except for SP, the stack pointer.)
+#[subenum(RegisterPairLdStAcc, RegisterPairNonSp)]
 #[derive(PartialEq, Debug)]
+/// 16 bit registers, handled as pairs of 8-bit registers (except for SP, the stack pointer.)
 pub enum RegisterPair {
     /// High-order register B, low-order register C
+    #[subenum(RegisterPairLdStAcc, RegisterPairNonSp)]
     BC,
     /// High-order register D, low-order register E
+    #[subenum(RegisterPairLdStAcc, RegisterPairNonSp)]
     DE,
     /// High-order register H, low-order register L
+    #[subenum(RegisterPairNonSp)]
     HL,
     /// Stack pointer - a direct 16-bit register
     SP,

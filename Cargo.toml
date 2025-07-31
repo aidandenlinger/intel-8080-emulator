@@ -23,7 +23,6 @@ missing_assert_message = "warn" # I like good explanations
 missing_docs_in_private_items = "warn" # Docs good
 module_name_repetitions = "warn" # I like the Rust style of not repeating module names
 multiple_inherent_impl = "warn" # Good to keep code together, this is a small codebase
-pattern_type_mismatch = "warn" # This has always been unclear to me, good to be verbose
 precedence_bits = "warn" # If I'm doing bit stuff I want it to be clear
 print_stderr = "warn" # In general I'm debugging. I can #expect on actual intended cases in the CLI
 print_stdout = "warn" # In general I'm debugging. I can #expect on actual intended cases in the CLI

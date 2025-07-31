@@ -120,7 +120,7 @@ fn parse_instruction(input: &[u8]) -> PResult<(&[u8], (Op, Size))> {
             let (i, data) = u16(i, &mut ctx)?;
             (i, Op::Lxi(RegisterPair::BC, data))
         }
-        0x02 => (i, Op::Stax(RegisterPair::BC)),
+        0x02 => (i, Op::Stax(RegisterPairLdStAcc::BC)),
         0x03 => (i, Op::Inx(RegisterPair::BC)),
         0x04 => (i, Op::Inr(RegisterOrMemory::Register(Register::B))),
         0x05 => (i, Op::Dcr(RegisterOrMemory::Register(Register::B))),
