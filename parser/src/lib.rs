@@ -1,4 +1,7 @@
 //! A parsing library for Intel 8080 programs.
+//!
+//! Following [the opcode chart from
+//! emulator101.com.](https://web.archive.org/web/20240929050651/http://www.emulator101.com/reference/8080-by-opcode.html)
 use core::result::Result as StdResult;
 use nom::IResult;
 use nom::Input;
@@ -98,7 +101,6 @@ fn u16<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], u16>
 }
 
 /// Parses an address from two bytes (handling little-endian-ness) and updates the Ctx.
-#[expect(dead_code, reason = "it's only dead for now")]
 fn addr<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Address> {
     update_ctx(map(nom_le_u16, Address), input, ctx)
 }
@@ -110,6 +112,10 @@ fn port<'input>(input: &'input [u8], ctx: &mut Ctx) -> IResult<&'input [u8], Por
 }
 
 /// Parses an instruction and how many parameters it used.
+#[expect(
+    clippy::too_many_lines,
+    reason = "Big switch case for instructions, breaking it up would be annoying"
+)]
 fn parse_instruction(input: &[u8]) -> PResult<(&[u8], (Op, Size))> {
     let mut ctx = Ctx::default();
     let (i, byte) = u8(input, &mut ctx)?;
@@ -129,8 +135,87 @@ fn parse_instruction(input: &[u8]) -> PResult<(&[u8], (Op, Size))> {
             (i, Op::Mvi(RegisterOrMemory::Register(Register::B), data))
         }
         0x07 => (i, Op::Rcl),
-        0x08 => (i, Op::Undefined),
         0x09 => (i, Op::Dad(RegisterPair::BC)),
+        0x0a => (i, Op::Ldax(RegisterPairLdStAcc::BC)),
+        0x0b => (i, Op::Dcx(RegisterPair::BC)),
+        0x0c => (i, Op::Inr(RegisterOrMemory::Register(Register::C))),
+        0x0d => (i, Op::Dcr(RegisterOrMemory::Register(Register::C))),
+        0x0e => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::C), data))
+        }
+        0x0f => (i, Op::Rrc),
+        0x11 => {
+            let (i, data) = u16(i, &mut ctx)?;
+            (i, Op::Lxi(RegisterPair::DE, data))
+        }
+        0x12 => (i, Op::Stax(RegisterPairLdStAcc::DE)),
+        0x13 => (i, Op::Inx(RegisterPair::DE)),
+        0x14 => (i, Op::Inr(RegisterOrMemory::Register(Register::D))),
+        0x15 => (i, Op::Dcr(RegisterOrMemory::Register(Register::D))),
+        0x16 => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::D), data))
+        }
+        0x17 => (i, Op::Ral),
+        0x19 => (i, Op::Dad(RegisterPair::DE)),
+        0x1a => (i, Op::Ldax(RegisterPairLdStAcc::DE)),
+        0x1b => (i, Op::Dcx(RegisterPair::DE)),
+        0x1c => (i, Op::Inr(RegisterOrMemory::Register(Register::E))),
+        0x1d => (i, Op::Dcr(RegisterOrMemory::Register(Register::E))),
+        0x1e => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::E), data))
+        }
+        0x1f => (i, Op::Rar),
+        0x21 => {
+            let (i, data) = u16(i, &mut ctx)?;
+            (i, Op::Lxi(RegisterPair::HL, data))
+        }
+        0x22 => {
+            let (i, addr) = addr(i, &mut ctx)?;
+            (i, Op::Shld(addr))
+        }
+        0x23 => (i, Op::Inx(RegisterPair::HL)),
+        0x24 => (i, Op::Inr(RegisterOrMemory::Register(Register::H))),
+        0x25 => (i, Op::Dcr(RegisterOrMemory::Register(Register::H))),
+        0x26 => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::H), data))
+        }
+        0x27 => (i, Op::Daa),
+        0x29 => (i, Op::Dad(RegisterPair::HL)),
+        0x2a => {
+            let (i, addr) = addr(i, &mut ctx)?;
+            (i, Op::Lhld(addr))
+        }
+        0x2b => (i, Op::Dcx(RegisterPair::HL)),
+        0x2c => (i, Op::Inr(RegisterOrMemory::Register(Register::L))),
+        0x2e => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::L), data))
+        }
+        0x2f => (i, Op::Cma),
+        0x31 => {
+            let (i, data) = u16(i, &mut ctx)?;
+            (i, Op::Lxi(RegisterPair::SP, data))
+        }
+        0x32 => {
+            let (i, addr) = addr(i, &mut ctx)?;
+            (i, Op::Sta(addr))
+        }
+        0x33 => (i, Op::Inx(RegisterPair::SP)),
+        0x34 => (i, Op::Inr(RegisterOrMemory::Memory)),
+        0x35 => (i, Op::Dcr(RegisterOrMemory::Memory)),
+        0x36 => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Memory, data))
+        }
+        0x37 => (i, Op::Stc),
+
+        0x08 | 0x10 | 0x18 | 0x20 | 0x28 | 0x30 | 0x38 | 0xcb | 0xd9 | 0xdd | 0xed | 0xfd => {
+            (i, Op::Undefined)
+        }
         _ => unimplemented!(),
     };
 
