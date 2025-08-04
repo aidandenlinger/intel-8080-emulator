@@ -2,6 +2,12 @@
 resolver = "3" # edition "2024" default
 members = ["disassembler", "parser"]
 
+[workspace.dependencies]
+clap = { version = "4.5.41", features = ["derive"] }
+nom = "8.0.0"
+subenum = "1.1.2"
+thiserror = "2.0.12"
+
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
