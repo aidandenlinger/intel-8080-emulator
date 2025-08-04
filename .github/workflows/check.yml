@@ -17,8 +17,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install just
 
-      - name: Install rust stable
-        run: rustup toolchain install stable --profile minimal --no-self-update
+      - name: Configure rust stable
+        run: rustup update stable --no-self-update && rustup default stable
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
