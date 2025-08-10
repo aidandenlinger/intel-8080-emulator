@@ -12,15 +12,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install just
-        run: |
-          sudo apt-get update
-          sudo apt-get install just
-
       - name: Configure rust stable
         run: rustup update stable --no-self-update && rustup default stable
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+
+      - name: Install just
+        run: cargo install just
 
       - run: just ci
