@@ -18,7 +18,9 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Install just
-        run: cargo install just
+      - name: Install Just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just@1
 
       - run: just ci
