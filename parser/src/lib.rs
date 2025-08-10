@@ -212,6 +212,243 @@ fn parse_instruction(input: &[u8]) -> PResult<(&[u8], (Op, Size))> {
             (i, Op::Mvi(RegisterOrMemory::Memory, data))
         }
         0x37 => (i, Op::Stc),
+        0x39 => (i, Op::Dad(RegisterPair::SP)),
+        0x3a => {
+            let (i, addr) = addr(i, &mut ctx)?;
+            (i, Op::Lda(addr))
+        }
+        0x3b => (i, Op::Dcx(RegisterPair::SP)),
+        0x3c => (i, Op::Inr(RegisterOrMemory::Register(Register::A))),
+        0x3d => (i, Op::Dcr(RegisterOrMemory::Register(Register::A))),
+        0x3e => {
+            let (i, data) = u8(i, &mut ctx)?;
+            (i, Op::Mvi(RegisterOrMemory::Register(Register::A), data))
+        }
+        0x3f => (i, Op::Cmc),
+        0x40 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::B),
+            ),
+        ),
+        0x41 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::C),
+            ),
+        ),
+        0x42 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::D),
+            ),
+        ),
+        0x43 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::E),
+            ),
+        ),
+        0x44 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::H),
+            ),
+        ),
+        0x45 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::L),
+            ),
+        ),
+        0x46 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Memory,
+            ),
+        ),
+        0x47 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::B),
+                RegisterOrMemory::Register(Register::A),
+            ),
+        ),
+        0x48 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::B),
+            ),
+        ),
+        0x49 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::C),
+            ),
+        ),
+        0x4a => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::D),
+            ),
+        ),
+        0x4b => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::E),
+            ),
+        ),
+        0x4c => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::H),
+            ),
+        ),
+        0x4d => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::L),
+            ),
+        ),
+        0x4e => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Memory,
+            ),
+        ),
+        0x4f => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::C),
+                RegisterOrMemory::Register(Register::A),
+            ),
+        ),
+        0x50 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::B),
+            ),
+        ),
+        0x51 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::C),
+            ),
+        ),
+        0x52 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::D),
+            ),
+        ),
+        0x53 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::E),
+            ),
+        ),
+        0x54 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::H),
+            ),
+        ),
+        0x55 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::L),
+            ),
+        ),
+        0x56 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Memory,
+            ),
+        ),
+        0x57 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::D),
+                RegisterOrMemory::Register(Register::A),
+            ),
+        ),
+        0x58 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::B),
+            ),
+        ),
+        0x59 => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::C),
+            ),
+        ),
+        0x5a => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::D),
+            ),
+        ),
+        0x5b => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::E),
+            ),
+        ),
+        0x5c => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::H),
+            ),
+        ),
+        0x5d => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::L),
+            ),
+        ),
+        0x5e => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Memory,
+            ),
+        ),
+        0x5f => (
+            i,
+            Op::Mov(
+                RegisterOrMemory::Register(Register::E),
+                RegisterOrMemory::Register(Register::A),
+            ),
+        ),
 
         0x08 | 0x10 | 0x18 | 0x20 | 0x28 | 0x30 | 0x38 | 0xcb | 0xd9 | 0xdd | 0xed | 0xfd => {
             (i, Op::Undefined)

@@ -6,7 +6,8 @@ use crate::{Error, PResult};
 #[derive(PartialEq, Debug)]
 pub enum Op {
     // Data transfer group
-    /// Move from arg 2 to arg 1. NOTE - memory to memory is invalid
+    /// Move from arg 2 to arg 1.
+    /// NOTE - memory to memory is invalid. The cooresponding opcode is the HLT instruction
     Mov(RegisterOrMemory, RegisterOrMemory),
     /// Move Immediate / Move to Memory Immediate
     Mvi(RegisterOrMemory, u8),
