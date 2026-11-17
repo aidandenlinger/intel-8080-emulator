@@ -24,10 +24,11 @@ Once you have Rust, you can build the binaries by running
 ```bash
 cargo build
 ```
+
 You can optionally install [Just], which allows you to use the [Justfile] in
 this repo to run small project-specific scripts (for example, `just build`). You
 can also look in the Justfile to see the commands and run them yourself, so it's
-only for convienence.
+only for convenience.
 
 ## Usage
 
@@ -61,13 +62,14 @@ Quoting a warning from [emulator101.com][disassembler warning]:
 > - a stream of nonsense code (like POP B POP B POP B POP C XTHL XTHL XTHL)
 >
 > That there is probably data in there that renders some portion of your
-> disassembly unusable. You might have to restart it an an offset if this happens
+> disassembly unusable. You might have to restart it at an offset if this happens
 > to you.
 
 ## Thanks
 
 - [emulator101.com] as an invaluable resource and guide.
-- [gameboy-rom-parser] as a good working example of how to use the [nom] parsing library.
+- [gameboy-rom-parser] as a good working example of
+  how to use the [nom] parsing library.
 
 ## Contributing
 
@@ -81,6 +83,7 @@ and want to implement this system myself. You're welcome to fork the project
 and work on your own repo!
 
 ## License
+
 MIT
 
 [emulator101.com]: https://web.archive.org/web/20241010195903/http://www.emulator101.com/
