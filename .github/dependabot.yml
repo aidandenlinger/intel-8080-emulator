@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # Github Actions: CI. not very important
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -9,3 +10,37 @@ updates:
       github-actions:
         patterns:
           - '*'
+    cooldown:
+      default-days: 7
+
+  # Nix flake: pulls in rust
+  - package-ecosystem: "nix"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      flake:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+
+  # Cargo: actual rust dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      cargo:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      cargo-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+      # Wait for a semver version to mature before adopting it
+      semver-major-days: 30
+

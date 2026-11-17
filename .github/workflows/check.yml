@@ -1,4 +1,4 @@
-name: Check
+name: CI
 on: push
 
 permissions: {}
@@ -7,28 +7,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     permissions:
       # Required for checkout while this repo is private
       contents: read
-   
+
     steps:
       - name: Checkout repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # We will not perform any other git operations in this repo
           persist-credentials: false
 
-      - name: Configure rust stable
-        run: rustup update stable --no-self-update && rustup default stable
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
-
-      - name: Install Just
-        uses: taiki-e/install-action@d6d752794628f1e1fffa3c4d3c8874e06f043d50 # v2.62.15
-        with:
-          tool: just@1
-
-      - run: just ci
+      - name: just check
+        run: nix develop --no-update-lock-file .#ci --command just check
